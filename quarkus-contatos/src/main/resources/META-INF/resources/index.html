@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contatos · Spring Boot</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --card-2: #273449;
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --primary: #38bdf8;
+            --primary-dark: #0ea5e9;
+            --danger: #f87171;
+            --success: #4ade80;
+            --border: #334155;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 32px 16px;
+        }
+        .container { max-width: 960px; margin: 0 auto; }
+        header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 24px; }
+        h1 { font-size: 22px; margin: 0; }
+        .badge {
+            font-size: 12px; padding: 3px 10px; border-radius: 999px;
+            background: rgba(56,189,248,.15); color: var(--primary); border: 1px solid rgba(56,189,248,.35);
+        }
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+        label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+        input {
+            width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border);
+            background: var(--card-2); color: var(--text); font-size: 14px;
+        }
+        input:focus { outline: 2px solid rgba(56,189,248,.45); outline-offset: 1px; border-color: var(--primary); }
+        .actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+        button {
+            padding: 10px 18px; border-radius: 8px; border: 0; cursor: pointer;
+            font-size: 14px; font-weight: 600; background: var(--primary); color: #082f49;
+        }
+        button:hover { background: var(--primary-dark); }
+        button.ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+        button.ghost:hover { color: var(--text); border-color: var(--muted); }
+        button.danger { background: transparent; color: var(--danger); border: 1px solid rgba(248,113,113,.4); }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { text-align: left; padding: 12px 10px; border-bottom: 1px solid var(--border); font-size: 14px; }
+        th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+        tbody tr:hover { background: rgba(56,189,248,.05); }
+        td.actions-cell { display: flex; gap: 8px; }
+        .link { color: var(--primary); text-decoration: none; }
+        .empty { text-align: center; color: var(--muted); padding: 24px; }
+        #mensagem { margin-top: 14px; font-size: 14px; min-height: 20px; }
+        .ok { color: var(--success); }
+        .erro { color: var(--danger); }
+        .toolbar { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+        .toolbar > div { flex: 1 1 220px; }
+        .meta { color: var(--muted); font-size: 12px; margin-top: 12px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Cadastro de Contatos</h1>
+        <span class="badge">Quarkus 3</span>
+    </header>
+
+    <section class="card">
+        <h2 id="titulo-form" style="font-size:16px;margin:0 0 14px;">Novo contato</h2>
+        <form id="form-contato" novalidate>
+            <input type="hidden" id="contato-id">
+            <div class="grid">
+                <div>
+                    <label for="nome">Nome</label>
+                    <input id="nome" name="nome" placeholder="Ana Souza" required minlength="3" maxlength="100">
+                </div>
+                <div>
+                    <label for="email">E-mail</label>
+                    <input id="email" name="email" type="email" placeholder="ana@example.com" required maxlength="150">
+                </div>
+                <div>
+                    <label for="telefone">Telefone</label>
+                    <input id="telefone" name="telefone" placeholder="+55 11 98888-0001" maxlength="20">
+                </div>
+            </div>
+            <div class="actions">
+                <button type="submit">Salvar</button>
+                <button type="button" class="ghost" id="btn-cancelar" hidden>Cancelar edição</button>
+            </div>
+            <div id="mensagem"></div>
+        </form>
+    </section>
+
+    <section class="card">
+        <div class="toolbar">
+            <div>
+                <label for="busca">Buscar por nome ou e-mail</label>
+                <input id="busca" placeholder="Digite para filtrar...">
+            </div>
+            <div style="flex:0 0 auto;">
+                <button type="button" class="ghost" id="btn-atualizar">Atualizar lista</button>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nome</th>
+                <th>E-mail</th>
+                <th>Telefone</th>
+                <th>Criado em</th>
+                <th style="width:170px;">Ações</th>
+            </tr>
+            </thead>
+            <tbody id="corpo-tabela"></tbody>
+        </table>
+        <div id="vazio" class="empty" hidden>Nenhum contato encontrado.</div>
+        <div class="meta" id="paginacao"></div>
+    </section>
+
+    <p class="meta">
+        Documentação interativa: <a class="link" href="/swagger-ui">/swagger-ui</a> ·
+        OpenAPI: <a class="link" href="/openapi">/openapi</a> ·
+        Health check: <a class="link" href="/q/health">/q/health</a> ·
+        Dev UI (modo dev): <a class="link" href="/q/dev-ui">/q/dev-ui</a>
+    </p>
+</div>
+
+<script>
+    const API = '/api/contatos';
+    const form = document.getElementById('form-contato');
+    const corpoTabela = document.getElementById('corpo-tabela');
+    const mensagem = document.getElementById('mensagem');
+    const busca = document.getElementById('busca');
+    const vazio = document.getElementById('vazio');
+    const tituloForm = document.getElementById('titulo-form');
+    const btnCancelar = document.getElementById('btn-cancelar');
+    const paginacao = document.getElementById('paginacao');
+
+    function notificar(texto, tipo) {
+        mensagem.textContent = texto;
+        mensagem.className = tipo;
+    }
+
+    function formatarData(iso) {
+        if (!iso) return '-';
+        return new Date(iso).toLocaleString('pt-BR');
+    }
+
+    async function carregar() {
+        const q = busca.value.trim();
+        const url = q ? `${API}?q=${encodeURIComponent(q)}&size=50` : `${API}?size=50`;
+        const resposta = await fetch(url);
+        if (!resposta.ok) {
+            notificar('Erro ao carregar contatos', 'erro');
+            return;
+        }
+        const pagina = await resposta.json();
+        render(pagina);
+    }
+
+    function render(pagina) {
+        corpoTabela.innerHTML = '';
+        vazio.hidden = pagina.content.length > 0;
+        pagina.content.forEach((contato) => {
+            const linha = document.createElement('tr');
+            linha.innerHTML = `
+                <td>${contato.id}</td>
+                <td>${contato.nome}</td>
+                <td>${contato.email}</td>
+                <td>${contato.telefone ?? '-'}</td>
+                <td>${formatarData(contato.criadoEm)}</td>
+                <td class="actions-cell">
+                    <button class="ghost" onclick="editar(${contato.id})">Editar</button>
+                    <button class="danger" onclick="remover(${contato.id})">Excluir</button>
+                </td>`;
+            corpoTabela.appendChild(linha);
+        });
+        paginacao.textContent = `${pagina.totalElements} contato(s) · página ${pagina.page + 1} de ${Math.max(pagina.totalPages, 1)}`;
+    }
+
+    function editar(id) {
+        fetch(`${API}/${id}`)
+            .then((r) => r.json())
+            .then((contato) => {
+                document.getElementById('contato-id').value = contato.id;
+                document.getElementById('nome').value = contato.nome;
+                document.getElementById('email').value = contato.email;
+                document.getElementById('telefone').value = contato.telefone ?? '';
+                tituloForm.textContent = `Editando contato #${contato.id}`;
+                btnCancelar.hidden = false;
+                window.scrollTo({top: 0, behavior: 'smooth'});
+            });
+    }
+
+    function limparFormulario() {
+        form.reset();
+        document.getElementById('contato-id').value = '';
+        tituloForm.textContent = 'Novo contato';
+        btnCancelar.hidden = true;
+    }
+
+    function remover(id) {
+        if (!confirm('Confirmar a exclusão do contato #' + id + '?')) return;
+        fetch(`${API}/${id}`, {method: 'DELETE'})
+            .then((r) => {
+                if (r.status === 204) {
+                    notificar('Contato excluído com sucesso', 'ok');
+                    carregar();
+                } else {
+                    notificar('Não foi possível excluir o contato', 'erro');
+                }
+            });
+    }
+
+    form.addEventListener('submit', async (evento) => {
+        evento.preventDefault();
+        const id = document.getElementById('contato-id').value;
+        const payload = {
+            nome: document.getElementById('nome').value.trim(),
+            email: document.getElementById('email').value.trim(),
+            telefone: document.getElementById('telefone').value.trim() || null
+        };
+        const metodo = id ? 'PUT' : 'POST';
+        const url = id ? `${API}/${id}` : API;
+        const resposta = await fetch(url, {
+            method: metodo,
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        if (resposta.ok) {
+            notificar(id ? 'Contato atualizado com sucesso' : 'Contato criado com sucesso', 'ok');
+            limparFormulario();
+            carregar();
+        } else {
+            const erro = await resposta.json().catch(() => null);
+            const detalhe = erro && erro.fieldErrors
+                ? Object.values(erro.fieldErrors).join(' ')
+                : (erro ? erro.message : 'falha na requisição');
+            notificar(detalhe, 'erro');
+        }
+    });
+
+    btnCancelar.addEventListener('click', limparFormulario);
+    document.getElementById('btn-atualizar').addEventListener('click', carregar);
+    busca.addEventListener('keyup', (evento) => {
+        if (evento.key === 'Enter') {
+            carregar();
+        }
+    });
+
+    carregar();
+</script>
+</body>
+</html>

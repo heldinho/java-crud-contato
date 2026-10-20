@@ -1,0 +1,116 @@
+# ---------------------------------------------------------------------------
+# Stack dos dois projetos: Spring Boot 3 + Quarkus 3 sobre um Postgres 16.
+#
+#   docker compose up -d --build
+#   docker compose logs -f springboot quarkus
+#   docker compose down -v        # down + apaga o volume do Postgres
+#
+# Nota: o Postgres cria os bancos contatos_spring e contatos_quarkus apenas
+# na primeira inicializacao do volume (db/init/01-create-databases.sql).
+# ---------------------------------------------------------------------------
+name: contatos
+
+# Bloco reaproveitado pelas duas aplicacoes
+x-app-defaults: &app-defaults
+  restart: unless-stopped
+  init: true
+  networks:
+    - contatos-net
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+services:
+  # ------------------------------------------------------------------ banco
+  postgres:
+    image: postgres:16-alpine
+    container_name: contatos-postgres
+    <<: *app-defaults
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-contatos}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-contatos}
+      POSTGRES_DB: postgres
+      # subdiretorio evita o problema do lost+found em volumes montados
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  # ----------------------------------------------------------- spring boot
+  springboot:
+    build:
+      context: ./springboot-contatos
+      dockerfile: Dockerfile
+    image: contatos/springboot:1.0.0
+    container_name: contatos-springboot
+    <<: *app-defaults
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Sobrescreve o H2 in-memory do application.properties
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/contatos_spring
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-contatos}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-contatos}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_H2_CONSOLE_ENABLED: "false"
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info
+      APP_SEED_ENABLED: ${APP_SEED_ENABLED:-true}
+    ports:
+      - "${SPRING_BOOT_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 40s
+    stop_grace_period: 30s
+
+  # --------------------------------------------------------------- quarkus
+  quarkus:
+    build:
+      context: ./quarkus-contatos
+      dockerfile: Dockerfile
+    image: contatos/quarkus:1.0.0
+    container_name: contatos-quarkus
+    <<: *app-defaults
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Sobrescreve o H2 in-memory do application.properties
+      QUARKUS_DATASOURCE_DB_KIND: postgresql
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/contatos_quarkus
+      QUARKUS_DATASOURCE_USERNAME: ${POSTGRES_USER:-contatos}
+      QUARKUS_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-contatos}
+      QUARKUS_DATASOURCE_JDBC_MAX_SIZE: "16"
+      QUARKUS_HIBERNATE_ORM_DATABASE_GENERATION: update
+      QUARKUS_HTTP_PORT: "8081"
+      APP_SEED_ENABLED: ${APP_SEED_ENABLED:-true}
+    ports:
+      - "${QUARKUS_PORT:-8081}:8081"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8081/q/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 30s
+    stop_grace_period: 30s
+
+volumes:
+  postgres-data:
+
+networks:
+  contatos-net:
+    driver: bridge
