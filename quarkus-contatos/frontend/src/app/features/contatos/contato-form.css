@@ -1,0 +1,10 @@
+/* Ajustes específicos do modal; a base visual vive em styles.css. */
+.modal {
+  max-height: min(90vh, 640px);
+  overflow-y: auto;
+}
+
+.modal__cabecalho h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}

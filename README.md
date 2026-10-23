@@ -21,7 +21,7 @@ comandos abaixo parecem um feitiço.
 
 | Palavra | O que é, em português simples | Analogia |
 |---|---|---|
-| **Java** | A **linguagem** em que o programa é escrito | O idioma que os computers entendem |
+| **Java** | A **linguagem** em que o programa é escrito | O idioma que os computadores entendem |
 | **JDK** | O **kit de ferramentas** que transforma o código `.java` em algo que o computador roda | O tradutor + máquina de escrever |
 | **Maven** | O programa que **baixa as bibliotecas** que o projeto usa e **organiza o build** | A lista de compras do Supermercado |
 | **Maven Wrapper** (`mvnw`) | Um **script** que baixa o Maven sozinho, pra você não precisar instalar nada | O colega que vai no mercado buscar os ingredientes por você |
@@ -35,7 +35,7 @@ comandos abaixo parecem um feitiço.
 | **PostgreSQL** | Um banco de dados **de verdade**, que guarda as coisas mesmo depois de desliga | O fichário de aço do escritório |
 | **Docker** | Uma forma de **empacotar** o programa com tudo que ele precisa, para rodar igual em qualquer computador | O **contêiner de carga**: leva a cozinha inteira junto |
 | **Docker Compose** | Sobe **vários contêineres de uma vez** (as 2 APIs + o banco) | A **mudança** que leva a casa toda de uma vez |
-| **Endpoint** | Um endereço específico que responde algo (ex.: `/api/contatos`) | O número doapartamento |
+| **Endpoint** | Um endereço específico que responde algo (ex.: `/api/contatos`) | O número do apartamento |
 | **Teste** | Um programinha que **confere sozinho** se o código continua funcionando | Conferir a lição de casa antes de entregar |
 | **Porta** | Um "número de endereço" que o computador usa para saber qual programa você quer chamar | O número do apartamento no prédio |
 
@@ -88,6 +88,242 @@ springboot-contatos/
 
 ---
 
+## 🐣 A VERSÃO 1 — `springboot-contatos` (porta 8080)
+
+> **Resuminho em uma frase:** é a versão feita com **Spring Boot**, o kit
+> "tudo pronto" mais famoso do Java. Imagina um **kit de montar boneco** em que
+> quase todas as peças já vêm encaixadas — você só precisa colocar as suas.
+
+📄 Manual completo desta versão: [`springboot-contatos/README.md`](springboot-contatos/README.md)
+
+### 📇 Ficha da Versão 1
+
+| Item | Detalhe | O que isso significa pra você |
+|---|---|---|
+| Pasta | `springboot-contatos/` | A VERSÃO 1 |
+| Ferramenta | Spring Boot **3.5.16** | O "kit de montar" usado |
+| Java | **17** | O idioma do código |
+| Porta | **8080** | O "número do apartamento" dela no prédio |
+| Comando para rodar | `./mvnw spring-boot:run` | O botão de "ligar" |
+| Banco de dados | **H2 em memória** (muda pra PostgreSQL no Docker) | Caderninho de rascunho por padrão |
+| Página web | http://localhost:8080/ | Onde você vê a lista de contatos |
+| Documentação | http://localhost:8080/swagger-ui.html | O cardápio clicável da API |
+| "Eu tô vivo?" | http://localhost:8080/actuator/health | O batimento cardíaco do programa |
+| Testes | **17** (`./mvnw test`) | A lista de conferência |
+| Arquivo final gerado | `target/springboot-contatos-1.0.0.jar` | O lanche embalado, pronto pra levar |
+
+### 🧰 De que "caixa de ferramentas" ela é feita?
+
+Cada item abaixo é uma **prateleira de biblioteca** que o `pom.xml` baixa sozinho:
+
+| Biblioteca (`pom.xml`) | Função | Analogia |
+|---|---|---|
+| `spring-boot-starter-web` | Receber pedidos HTTP e devolver resposta (já traz o servidor **Tomcat**) | A **porta da frente** + o garçom |
+| `spring-boot-starter-data-jpa` | Falar com o banco de dados sem escrever SQL | O **despensário** automático |
+| `spring-boot-starter-validation` | Conferir se o que chegou é válido (nome, e-mail...) | O **segurança** da entrada |
+| `spring-boot-starter-actuator` | Mostrar se o programa está vivo e saudável | O **termômetro** do programa |
+| `springdoc-openapi` | Gerar o Swagger UI (a página de testes clicável) | O **cardápio** impresso |
+| `h2` | Banco temporário, na memória | O **caderninho de rascunho** |
+| `postgresql` | Banco de verdade, que guarda os dados | O **fichário de aço** |
+| `spring-boot-starter-test` | As ferramentas dos testes automáticos | A **lista de conferência** |
+
+### 🎬 O que acontece quando você roda `./mvnw spring-boot:run`?
+
+1. O `mvnw` confere se o Java 17 está ali (se não estiver, ele reclama).
+2. Ele baixa/organiza as bibliotecas do `pom.xml` (1ª vez: demora; depois: rapidinho).
+3. Compila os `.java` → vira código que a máquina entende.
+4. O Spring **liga sozinho** o servidor Tomcat na porta **8080**.
+5. Ele cria as tabelas do banco (H2) e o `SeedContatos` insere os 3 contatos
+   de exemplo (**Ana Souza**, **Bruno Lima**, **Carla Menezes**).
+6. Pronto: aparece `Started ContatosApplication in X seconds`. É só abrir o
+   navegador em http://localhost:8080/.
+
+> ⏹️ Para **desligar**: `Ctrl + C` no terminal. Como o banco é de memória,
+> **tudo que você criou some**. (Quer que não desapareça? Use o modo Docker lá
+> embaixo, com PostgreSQL.)
+
+### 🗂️ Os arquivos "especiais" desta versão
+
+| Arquivo | O que ele faz |
+|---|---|
+| `ContatosApplication.java` | O **botão de ligar**: anotado com `@SpringBootApplication`, é dele que o Spring começa tudo |
+| `config/SeedContatos.java` | O **enchedor de exemplo**: roda uma vez no início e cria Ana, Bruno e Carla (desligue com `app.seed.enabled=false`) |
+| `config/OpenApiConfig.java` | Escreve o título/versão que aparece no Swagger |
+| `domain/Contato.java` | O **molde** do contato + a regra "e-mail não pode repetir" |
+| `web/ContatoController.java` | O **garçom**: recebe o pedido HTTP e passa pro cérebro |
+| `service/ContatoService.java` | O **cérebro**: normaliza o e-mail, confere duplicidade, pagina |
+| `repository/ContatoRepository.java` | O **despensário**: único que toca no banco |
+| `error/GlobalExceptionHandler.java` | O **tradutor de erros**: transforma exceção em JSON bonito |
+| `src/main/resources/static/index.html` | A **págininha visual** que você abre no navegador |
+
+### ⚙️ O que está escrito no `application.properties` (a "mesinha de comando")
+
+| Propriedade | Valor | Em português |
+|---|---|---|
+| `server.port` | `8080` | Em que porta ela atende |
+| `spring.datasource.url` | `jdbc:h2:mem:contatos` | Qual banco (memória!) |
+| `spring.jpa.hibernate.ddl-auto` | `update` | Deixa o Hibernate criar/atualizar as tabelas |
+| `spring.jpa.open-in-view` | `false` | Não segura a conexão do banco depois da hora certa (mais rápido) |
+| `spring.h2.console.enabled` | `true` | Liga o console visual do H2 em `/h2-console` |
+| `app.seed.enabled` | `true` | Insere os 3 contatos de exemplo |
+| `management.endpoints...` | `health,info` | Só expõe saúde e informações (não o resto — mais seguro) |
+
+### 🕹️ Modo "rodando o .jar" (como se fosse um app de verdade)
+
+```bash
+cd springboot-contatos
+./mvnw clean package          # monta o "lanche embalado"
+java -jar target/springboot-contatos-1.0.0.jar
+```
+
+---
+
+## 🦘 A VERSÃO 2 — `quarkus-contatos` (porta 8081)
+
+> **Resuminho em uma frase:** é a versão feita com **Quarkus**, um "primo
+> mais novo" do Java que faz **a mesma coisa**, mas é conhecido por ser
+> **mais leve e ligar mais rápido** — e ainda pode virar um executável
+> **sem Java nenhum** por baixo.
+
+📄 Manual completo desta versão: [`quarkus-contatos/README.md`](quarkus-contatos/README.md)
+
+### 📇 Ficha da Versão 2
+
+| Item | Detalhe | O que isso significa pra você |
+|---|---|---|
+| Pasta | `quarkus-contatos/` | A VERSÃO 2 |
+| Ferramenta | Quarkus **3.40.1** | Outro "kit de montar" |
+| Java | **17** | O mesmo idioma da VERSÃO 1 |
+| Porta | **8081** | Apartamento diferente pra não brigar com a 8080 |
+| Comando para rodar | `./mvnw quarkus:dev` | O botão de "ligar" **em modo turbo** |
+| Banco de dados | **H2 em memória** (muda pra PostgreSQL no Docker) | Caderninho de rascunho por padrão |
+| Página web | http://localhost:8081/ | Onde você vê a lista de contatos |
+| Documentação | http://localhost:8081/swagger-ui | O cardápio clicável da API |
+| "Eu tô vivo?" | http://localhost:8081/q/health | O batimento cardíaco do programa |
+| Painel do modo dev | http://localhost:8081/q/dev-ui | O **painel de instrumentos** (só existe no modo dev) |
+| Testes | **17** (`./mvnw test`) | A lista de conferência |
+| Arquivo final gerado | `target/quarkus-app/quarkus-run.jar` | O lanche embalado desta versão |
+
+### 🧰 De que "caixa de ferramentas" ela é feita?
+
+| Biblioteca (`pom.xml`) | Função | Analogia |
+|---|---|---|
+| `quarkus-rest-jackson` | Criar a API REST e converter objeto ↔ JSON | A **porta da frente** + o garçom |
+| `quarkus-hibernate-orm-panache` | Falar com o banco com **bem menos código** que o JPA normal | O **despensário** com atalhos |
+| `quarkus-hibernate-validator` | Conferir se o que chegou é válido | O **segurança** da entrada |
+| `quarkus-jdbc-h2` | Banco temporário, na memória | O **caderninho de rascunho** |
+| `quarkus-jdbc-postgresql` | Banco de verdade, que guarda os dados | O **fichário de aço** |
+| `quarkus-smallrye-openapi` | Gera o Swagger UI + o "desenho" da API em JSON | O **cardápio** impresso |
+| `quarkus-smallrye-health` | Responde `/q/health` (estou vivo?) | O **termômetro** |
+| `quarkus-arc` | O "mãozinhas invisíveis" que conectam as classes (o CDI) | O **gerente** que passa recado de um pro outro |
+| `quarkus-junit5`, `rest-assured`, `assertj` | Ferramentas dos testes automáticos | A **lista de conferência** |
+
+### 🎬 O que acontece quando você roda `./mvnw quarkus:dev`?
+
+1. O `mvnw` confere se o Java 17 está ali.
+2. Baixa/organiza as bibliotecas do `pom.xml` (1ª vez: demora; depois: rapidinho).
+3. O Quarkus sobe em **modo dev**: mais rápido e com **live reload**.
+4. Cria as tabelas do H2 **do zero** (`drop-and-create`: ele apaga e refaz a
+   cada vez que liga — por isso os dados somem ao reiniciar).
+5. O `SeedContatos` insere os 3 contatos de exemplo (Ana, Bruno e Carla).
+6. Pronto: servidor na porta **8081**.
+
+> ⏹️ Para **desligar**: `Ctrl + C`.
+>
+> ✨ **Bônus do modo dev:** salve qualquer arquivo `.java` e a aplicação
+> **recarrega sozinho**, sem você digitar nada. Dá pra ver tudo em
+> http://localhost:8081/q/dev-ui (abas, endpoints, métricas...).
+
+### 🗂️ Os arquivos "especiais" desta versão
+
+| Arquivo | O que ele faz |
+|---|---|
+| `ContatosApplication.java` | O **botão de ligar** + define o título da documentação OpenAPI |
+| `config/AppConfig.java` | Lê a configuração de um jeito **tipado** (compilador confere pra você) usando `@ConfigMapping` |
+| `config/SeedContatos.java` | O **enchedor de exemplo** — aqui ele escuta o evento `StartupEvent` (o "gongo" de que a aplicação começou) |
+| `domain/Contato.java` | O **molde** do contato + a regra "e-mail não pode repetir" |
+| `web/ContatoResource.java` | O **garçom** — no Quarkus ele se chama *Resource*, não *Controller* |
+| `service/ContatoService.java` | O **cérebro** — idêntico em regras ao da VERSÃO 1 |
+| `repository/ContatoRepository.java` | O **despensário** — usa `PanacheRepository` (menos código) |
+| `error/*Mapper.java` | Os **tradutores de erro** — cada erro tem seu próprio tradutor (`ExceptionMapper`) |
+| `src/main/resources/META-INF/resources/index.html` | A **páginha visual** (aqui o endereço é diferente do Spring!) |
+
+### ⚙️ O que está escrito no `application.properties` (a "mesinha de comando")
+
+| Propriedade | Valor | Em português |
+|---|---|---|
+| `quarkus.http.port` | `8081` | Em que porta ela atende |
+| `quarkus.datasource.db-kind` | `h2` | Qual banco usar |
+| `quarkus.datasource.jdbc.url` | `jdbc:h2:mem:contatos` | Endereço do banco (memória!) |
+| `quarkus.hibernate-orm.database.generation` | `drop-and-create` | Recria as tabelas **do zero** a cada start |
+| `quarkus.swagger-ui.always-include` | `true` | Swagger disponível mesmo fora do modo dev |
+| `app.seed.enabled` | `true` | Insere os 3 contatos de exemplo |
+| `quarkus.log.category."com.example.contatos"` | `DEBUG` | Logs bem detalhados pra essa pasta |
+
+### 🕹️ Modo "rodando o .jar" (como se fosse um app de verdade)
+
+```bash
+cd quarkus-contatos
+./mvnw clean package                # monta o "lanche embalado"
+java -jar target/quarkus-app/quarkus-run.jar
+```
+
+### 🚀 E o modo "superpoder" do Quarkus (só pra saber que existe)
+
+```bash
+./mvnw package -Dnative     # gera um executável SEM precisar de Java instalado
+```
+
+> Isso precisa de uma ferramenta extra (**GraalVM/Mandrel**) e **não está
+> configurado** aqui no projeto. É tipo "modo avançado": o programa vira um
+> aplicativo soltinho, que liga em **milissegundos** e quase não usa memória.
+> O Spring Boot também tem algo parecido (GraalVM native), mas aqui também
+> não está ligado.
+
+---
+
+## 🪙 As duas versões lado a lado (30 segundos)
+
+| Pergunta | 🐣 Spring Boot | 🦘 Quarkus |
+|---|---|---|
+| Porta | 8080 | 8081 |
+| Comando | `./mvnw spring-boot:run` | `./mvnw quarkus:dev` |
+| Ligou em... | uns 2–5 segundos | mais rápido (famoso por isso) |
+| "Garçom" se chama | `ContatoController` | `ContatoResource` |
+| "Despensário" se chama | `ContatoRepository extends JpaRepository` | `ContatoRepository implements PanacheRepository` |
+| Página HTML fica em | `resources/static/` | `resources/META-INF/resources/` |
+| Saúde do programa | `/actuator/health` | `/q/health` |
+| Recarrega sozinho ao salvar? | Não (precisa reiniciar) | **Sim!** (live reload) |
+| Painel de dev | — | `/q/dev-ui` |
+| Testes | `@SpringBootTest` + MockMvc | `@QuarkusTest` + REST Assured |
+| Resultado final | Mesmíssima API e mesmos **17 testes** ✅ | Mesmíssima API e mesmos **17 testes** ✅ |
+
+> 🎯 **A grande sacada:** os dois programas são **gêmeos por fora** e
+> **diferentes por dentro**. Se você usar um sem olhar o código, não vai
+> notar diferença — e é exatamente **isso** que um bom projeto Java deve
+> conseguir.
+
+---
+
+## 🏃‍♂️ Como rodar as DUAS ao mesmo tempo (pra comparar)
+
+Abra **dois terminais** (ou duas abas):
+
+```bash
+# Terminal 1
+cd springboot-contatos
+./mvnw spring-boot:run        # sobe na 8080
+
+# Terminal 2
+cd quarkus-contatos
+./mvnw quarkus:dev            # sobe na 8081
+```
+
+Depois é só alternar o `8080` ↔ `8081` em qualquer comando `curl` ou endereço
+do navegador e comparar as respostas. Elas são **iguais**.
+
+---
+
 ## 🛠️ O que você precisa instalar ANTES
 
 Boas notícias: só **uma** coisa.
@@ -122,6 +358,8 @@ Não precisa instalar Maven, nem Banco de Dados, nem servidor nenhum. O
 `./mvnw` (o Maven Wrapper) **baixa tudo sozinho** na primeira vez.
 
 ---
+
+<a id="como-rodar-no-macos"></a>
 
 ## 🚀 Bora rodar! (passo a passo)
 

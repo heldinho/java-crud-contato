@@ -1,0 +1,131 @@
+<section class="painel" [class.painel--carregando]="carregando()">
+  <div class="painel__cabecalho">
+    <div class="busca">
+      <label for="busca" class="visivel-para-leitores-de-tela">Buscar contatos</label>
+      <input
+        id="busca"
+        type="search"
+        placeholder="Buscar por nome, e-mail ou telefone…"
+        [formControl]="buscaControl"
+      />
+    </div>
+    <button type="button" class="botao botao--primario" (click)="novo()">
+      <span aria-hidden="true">＋</span> Novo contato
+    </button>
+  </div>
+
+  @if (carregando() && contatos().length === 0) {
+    <p class="estado" role="status">Carregando contatos…</p>
+  } @else if (erroAoCarregar(); as erro) {
+    <div class="estado estado--erro" role="alert">
+      <p>Não foi possível carregar os contatos: {{ erro }}</p>
+      <button type="button" class="botao botao--secundario" (click)="carregar()">
+        Tentar novamente
+      </button>
+    </div>
+  } @else if (contatos().length === 0) {
+    <p class="estado">
+      Nenhum contato encontrado{{ termoBusca() ? ' para a busca “' + termoBusca() + '”' : '' }}.
+    </p>
+  } @else {
+    <div class="tabela-scroll">
+      <table class="tabela">
+        <caption class="visivel-para-leitores-de-tela">
+          Lista de contatos
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Nome</th>
+            <th scope="col">E-mail</th>
+            <th scope="col">Telefone</th>
+            <th scope="col">Criado em</th>
+            <th scope="col" class="tabela__acoes">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (contato of contatos(); track contato.id) {
+            <tr>
+              <td>{{ contato.nome }}</td>
+              <td>
+                <a [href]="'mailto:' + contato.email">{{ contato.email }}</a>
+              </td>
+              <td>{{ contato.telefone ?? '—' }}</td>
+              <td>{{ contato.criadoEm | date: 'dd/MM/yyyy HH:mm' }}</td>
+              <td class="tabela__acoes">
+                @if (idParaExcluir() === contato.id) {
+                  <span class="confirmacao">
+                    Excluir?
+                    <button
+                      type="button"
+                      class="botao botao--perigo"
+                      (click)="confirmarExclusao(contato)"
+                    >
+                      Sim
+                    </button>
+                    <button
+                      type="button"
+                      class="botao botao--secundario"
+                      (click)="cancelarExclusao()"
+                    >
+                      Não
+                    </button>
+                  </span>
+                } @else {
+                  <button
+                    type="button"
+                    class="botao botao--link"
+                    (click)="editar(contato)"
+                    [attr.aria-label]="'Editar ' + contato.nome"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    type="button"
+                    class="botao botao--link botao--link-perigo"
+                    (click)="pedirConfirmacaoExclusao(contato)"
+                    [attr.aria-label]="'Excluir ' + contato.nome"
+                  >
+                    Excluir
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <nav class="paginacao" aria-label="Paginação de contatos">
+      <button
+        type="button"
+        class="botao botao--secundario"
+        [disabled]="!podeAnterior() || carregando()"
+        (click)="anterior()"
+      >
+        ← Anterior
+      </button>
+      <span aria-live="polite">
+        Página {{ (dados()?.page ?? 0) + 1 }} de {{ dados()?.totalPages ?? 1 }} ({{
+          dados()?.totalElements ?? 0
+        }}
+        contato(s))
+      </span>
+      <button
+        type="button"
+        class="botao botao--secundario"
+        [disabled]="!podeProxima() || carregando()"
+        (click)="proxima()"
+      >
+        Próxima →
+      </button>
+    </nav>
+  }
+</section>
+
+@if (formAberto()) {
+  <app-contato-form
+    [contato]="contatoEmEdicao()"
+    (salvo)="aoSalvar($event)"
+    (cancelado)="fecharForm()"
+  />
+}

@@ -1,0 +1,31 @@
+<header class="cabecalho">
+  <h1>
+    Contatos
+    <span class="cabecalho__badge">Angular 22 • {{ backend }} :{{ porta }}</span>
+  </h1>
+</header>
+
+<main class="conteudo">
+  <app-contatos-page />
+</main>
+
+<div class="toasts" role="status" aria-live="polite">
+  @for (item of toast.toasts(); track item.id) {
+    <div
+      class="toast"
+      [class.toast--sucesso]="item.tipo === 'sucesso'"
+      [class.toast--erro]="item.tipo === 'erro'"
+      [class.toast--info]="item.tipo === 'info'"
+    >
+      <span>{{ item.texto }}</span>
+      <button
+        type="button"
+        class="botao-icone"
+        aria-label="Fechar notificação"
+        (click)="toast.remover(item.id)"
+      >
+        ✕
+      </button>
+    </div>
+  }
+</div>

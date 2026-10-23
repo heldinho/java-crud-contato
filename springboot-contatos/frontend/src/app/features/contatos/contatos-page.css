@@ -1,0 +1,6 @@
+/* Indica atualização em andamento sem esconder o conteúdo atual. */
+.painel--carregando .tabela-scroll,
+.painel--carregando .paginacao {
+  opacity: 0.55;
+  pointer-events: none;
+}

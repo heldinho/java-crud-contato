@@ -1,0 +1,80 @@
+<div class="modal-fundo" (click)="cancelar()">
+  <div
+    class="modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="titulo-form"
+    (click)="$event.stopPropagation()"
+    (keydown.escape)="cancelar()"
+  >
+    <header class="modal__cabecalho">
+      <h2 id="titulo-form">{{ modoEdicao ? 'Editar contato' : 'Novo contato' }}</h2>
+      <button type="button" class="botao-icone" aria-label="Fechar" (click)="cancelar()">✕</button>
+    </header>
+
+    @if (erroGeral(); as erro) {
+      <p class="alerta alerta--erro" role="alert">{{ erro }}</p>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="salvar()" novalidate>
+      <div class="campo">
+        <label for="nome">Nome *</label>
+        <input
+          id="nome"
+          type="text"
+          formControlName="nome"
+          autocomplete="name"
+          autofocus
+          [attr.aria-invalid]="erroDe('nome') ? true : null"
+          [attr.aria-describedby]="erroDe('nome') ? 'nome-erro' : null"
+        />
+        @if (erroDe('nome'); as erro) {
+          <span id="nome-erro" class="campo__erro">{{ erro }}</span>
+        }
+      </div>
+
+      <div class="campo">
+        <label for="email">E-mail *</label>
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          autocomplete="email"
+          [attr.aria-invalid]="erroDe('email') ? true : null"
+          [attr.aria-describedby]="erroDe('email') ? 'email-erro' : null"
+        />
+        @if (erroDe('email'); as erro) {
+          <span id="email-erro" class="campo__erro">{{ erro }}</span>
+        }
+      </div>
+
+      <div class="campo">
+        <label for="telefone">Telefone</label>
+        <input
+          id="telefone"
+          type="tel"
+          formControlName="telefone"
+          autocomplete="tel"
+          placeholder="(11) 99999-9999"
+          [attr.aria-invalid]="erroDe('telefone') ? true : null"
+          [attr.aria-describedby]="
+            erroDe('telefone') ? 'telefone-erro telefone-ajuda' : 'telefone-ajuda'
+          "
+        />
+        <span id="telefone-ajuda" class="campo__ajuda"
+          >Opcional: dígitos, espaço, +, - e parênteses.</span
+        >
+        @if (erroDe('telefone'); as erro) {
+          <span id="telefone-erro" class="campo__erro">{{ erro }}</span>
+        }
+      </div>
+
+      <footer class="modal__rodape">
+        <button type="button" class="botao botao--secundario" (click)="cancelar()">Cancelar</button>
+        <button type="submit" class="botao botao--primario" [disabled]="salvando()">
+          {{ salvando() ? 'Salvando…' : modoEdicao ? 'Salvar alterações' : 'Criar contato' }}
+        </button>
+      </footer>
+    </form>
+  </div>
+</div>
