@@ -1,4 +1,14 @@
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  ElementRef,
+  Injector,
+  afterNextRender,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -8,6 +18,20 @@ import { ToastService } from '../../core/toast.service';
 import type { Contato, Pagina } from '../../core/contato.model';
 import { extrairErroApi } from '../../core/erro-api';
 import { ContatoForm } from './contato-form';
+import { UiButtonDirective } from '../../ui/button/button';
+import { UiCardDirective } from '../../ui/card/card';
+import { UiInputDirective } from '../../ui/input/input';
+import {
+  LucideArrowLeft,
+  LucideArrowRight,
+  LucideLoaderCircle,
+  LucidePencil,
+  LucidePlus,
+  LucideSearch,
+  LucideTrash2,
+  LucideTriangleAlert,
+  LucideUsers,
+} from '@lucide/angular';
 
 const TAMANHO_DA_PAGINA = 10;
 
@@ -16,7 +40,23 @@ const TAMANHO_DA_PAGINA = 10;
   selector: 'app-contatos-page',
   styleUrl: './contatos-page.css',
   templateUrl: './contatos-page.html',
-  imports: [ReactiveFormsModule, DatePipe, ContatoForm],
+  imports: [
+    ReactiveFormsModule,
+    DatePipe,
+    ContatoForm,
+    UiButtonDirective,
+    UiCardDirective,
+    UiInputDirective,
+    LucideArrowLeft,
+    LucideArrowRight,
+    LucideLoaderCircle,
+    LucidePencil,
+    LucidePlus,
+    LucideSearch,
+    LucideTrash2,
+    LucideTriangleAlert,
+    LucideUsers,
+  ],
 })
 export class ContatosPage {
   private readonly service = inject(ContatoService);
@@ -31,7 +71,13 @@ export class ContatosPage {
 
   protected readonly formAberto = signal(false);
   protected readonly contatoEmEdicao = signal<Contato | null>(null);
-  protected readonly idParaExcluir = signal<number | null>(null);
+  /** Contato aguardando confirmação de exclusão no modal; `null` quando fechado. */
+  protected readonly contatoParaExcluir = signal<Contato | null>(null);
+  protected readonly excluindo = signal(false);
+
+  private readonly injector = inject(Injector);
+  private readonly botaoCancelarExclusao =
+    viewChild<ElementRef<HTMLButtonElement>>('botaoCancelarExclusao');
 
   protected readonly buscaControl = new FormControl('', { nonNullable: true });
 
@@ -82,6 +128,17 @@ export class ContatosPage {
     }
   }
 
+  /** Iniciais (até 2 letras) do nome, para o avatar da lista. */
+  protected iniciais(nome: string): string {
+    return nome
+      .trim()
+      .split(/\s+/)
+      .filter((parte) => parte.length > 0)
+      .slice(0, 2)
+      .map((parte) => parte.charAt(0).toUpperCase())
+      .join('');
+  }
+
   protected proxima(): void {
     if (this.podeProxima()) {
       this.paginaAtual.update((pagina) => pagina + 1);
@@ -111,22 +168,35 @@ export class ContatosPage {
   }
 
   protected pedirConfirmacaoExclusao(contato: Contato): void {
-    this.idParaExcluir.set(contato.id);
+    this.contatoParaExcluir.set(contato);
+    // Foca o botão seguro ao abrir o modal (a11y), após o render do diálogo.
+    afterNextRender(() => this.botaoCancelarExclusao()?.nativeElement.focus(), {
+      injector: this.injector,
+    });
   }
 
   protected cancelarExclusao(): void {
-    this.idParaExcluir.set(null);
+    if (!this.excluindo()) {
+      this.contatoParaExcluir.set(null);
+    }
   }
 
   protected confirmarExclusao(contato: Contato): void {
+    if (this.excluindo()) {
+      return;
+    }
+
+    this.excluindo.set(true);
     this.service.remover(contato.id).subscribe({
       next: () => {
-        this.idParaExcluir.set(null);
+        this.excluindo.set(false);
+        this.contatoParaExcluir.set(null);
         this.toasts.mostrar(`Contato "${contato.nome}" excluído.`);
         this.carregar();
       },
       error: (erro: unknown) => {
-        this.idParaExcluir.set(null);
+        this.excluindo.set(false);
+        this.contatoParaExcluir.set(null);
         this.toasts.mostrar(extrairErroApi(erro).message, 'erro');
       },
     });

@@ -1,5 +1,8 @@
 <header class="cabecalho">
   <h1>
+    <span class="cabecalho__icone" aria-hidden="true">
+      <svg lucideContact [size]="20"></svg>
+    </span>
     Contatos
     <span class="cabecalho__badge">Angular 22 • {{ backend }} :{{ porta }}</span>
   </h1>
@@ -17,14 +20,26 @@
       [class.toast--erro]="item.tipo === 'erro'"
       [class.toast--info]="item.tipo === 'info'"
     >
+      <span class="toast__icone" aria-hidden="true">
+        @if (item.tipo === 'sucesso') {
+          <svg lucideCircleCheck [size]="18"></svg>
+        } @else if (item.tipo === 'erro') {
+          <svg lucideCircleX [size]="18"></svg>
+        } @else {
+          <svg lucideInfo [size]="18"></svg>
+        }
+      </span>
       <span>{{ item.texto }}</span>
       <button
         type="button"
-        class="botao-icone"
+        uiButton
+        variant="ghost"
+        size="icon"
+        extraClasses="h-7 w-7"
         aria-label="Fechar notificação"
         (click)="toast.remover(item.id)"
       >
-        ✕
+        <svg lucideX aria-hidden="true"></svg>
       </button>
     </div>
   }

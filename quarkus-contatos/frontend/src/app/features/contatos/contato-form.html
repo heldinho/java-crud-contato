@@ -9,7 +9,16 @@
   >
     <header class="modal__cabecalho">
       <h2 id="titulo-form">{{ modoEdicao ? 'Editar contato' : 'Novo contato' }}</h2>
-      <button type="button" class="botao-icone" aria-label="Fechar" (click)="cancelar()">✕</button>
+      <button
+        type="button"
+        uiButton
+        variant="ghost"
+        size="icon"
+        aria-label="Fechar"
+        (click)="cancelar()"
+      >
+        <svg lucideX aria-hidden="true"></svg>
+      </button>
     </header>
 
     @if (erroGeral(); as erro) {
@@ -22,6 +31,7 @@
         <input
           id="nome"
           type="text"
+          uiInput
           formControlName="nome"
           autocomplete="name"
           autofocus
@@ -38,6 +48,7 @@
         <input
           id="email"
           type="email"
+          uiInput
           formControlName="email"
           autocomplete="email"
           [attr.aria-invalid]="erroDe('email') ? true : null"
@@ -53,6 +64,7 @@
         <input
           id="telefone"
           type="tel"
+          uiInput
           formControlName="telefone"
           autocomplete="tel"
           placeholder="(11) 99999-9999"
@@ -70,8 +82,8 @@
       </div>
 
       <footer class="modal__rodape">
-        <button type="button" class="botao botao--secundario" (click)="cancelar()">Cancelar</button>
-        <button type="submit" class="botao botao--primario" [disabled]="salvando()">
+        <button type="button" uiButton variant="secondary" (click)="cancelar()">Cancelar</button>
+        <button type="submit" uiButton [disabled]="salvando()">
           {{ salvando() ? 'Salvando…' : modoEdicao ? 'Salvar alterações' : 'Criar contato' }}
         </button>
       </footer>

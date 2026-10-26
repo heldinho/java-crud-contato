@@ -3,6 +3,9 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ContatoService } from '../../core/contato.service';
 import type { Contato, ContatoRequest } from '../../core/contato.model';
 import { extrairErroApi } from '../../core/erro-api';
+import { UiButtonDirective } from '../../ui/button/button';
+import { UiInputDirective } from '../../ui/input/input';
+import { LucideX } from '@lucide/angular';
 
 type Campo = 'nome' | 'email' | 'telefone';
 
@@ -14,7 +17,7 @@ const TELEFONE_REGEX = /^[0-9+()\s-]{8,20}$/;
   selector: 'app-contato-form',
   styleUrl: './contato-form.css',
   templateUrl: './contato-form.html',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, UiButtonDirective, UiInputDirective, LucideX],
 })
 export class ContatoForm {
   private readonly fb = inject(FormBuilder);

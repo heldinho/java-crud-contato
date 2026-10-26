@@ -1,30 +1,48 @@
-<section class="painel" [class.painel--carregando]="carregando()">
+<section uiCard class="px-5 py-4" [class.painel--carregando]="carregando()">
   <div class="painel__cabecalho">
     <div class="busca">
       <label for="busca" class="visivel-para-leitores-de-tela">Buscar contatos</label>
+      <span class="busca__icone" aria-hidden="true">
+        <svg lucideSearch [size]="16"></svg>
+      </span>
       <input
         id="busca"
         type="search"
+        uiInput
+        extraClasses="pl-9"
         placeholder="Buscar por nome, e-mail ou telefone…"
         [formControl]="buscaControl"
       />
     </div>
-    <button type="button" class="botao botao--primario" (click)="novo()">
-      <span aria-hidden="true">＋</span> Novo contato
+    <button type="button" uiButton (click)="novo()">
+      <svg lucidePlus aria-hidden="true"></svg>
+      Novo contato
     </button>
   </div>
 
   @if (carregando() && contatos().length === 0) {
-    <p class="estado" role="status">Carregando contatos…</p>
+    <p class="estado" role="status">
+      <span class="estado__icone" aria-hidden="true">
+        <svg lucideLoaderCircle class="animate-spin"></svg>
+      </span>
+      Carregando contatos…
+    </p>
   } @else if (erroAoCarregar(); as erro) {
     <div class="estado estado--erro" role="alert">
+      <span class="estado__icone" aria-hidden="true">
+        <svg lucideTriangleAlert [size]="24"></svg>
+      </span>
       <p>Não foi possível carregar os contatos: {{ erro }}</p>
-      <button type="button" class="botao botao--secundario" (click)="carregar()">
+      <button type="button" uiButton variant="secondary" (click)="carregar()">
+        <svg lucideArrowRight aria-hidden="true"></svg>
         Tentar novamente
       </button>
     </div>
   } @else if (contatos().length === 0) {
     <p class="estado">
+      <span class="estado__icone" aria-hidden="true">
+        <svg lucideUsers [size]="24"></svg>
+      </span>
       Nenhum contato encontrado{{ termoBusca() ? ' para a busca “' + termoBusca() + '”' : '' }}.
     </p>
   } @else {
@@ -45,49 +63,42 @@
         <tbody>
           @for (contato of contatos(); track contato.id) {
             <tr>
-              <td>{{ contato.nome }}</td>
+              <td>
+                <span class="celula-nome">
+                  <span class="avatar" aria-hidden="true">{{ iniciais(contato.nome) }}</span>
+                  <span>{{ contato.nome }}</span>
+                </span>
+              </td>
               <td>
                 <a [href]="'mailto:' + contato.email">{{ contato.email }}</a>
               </td>
               <td>{{ contato.telefone ?? '—' }}</td>
               <td>{{ contato.criadoEm | date: 'dd/MM/yyyy HH:mm' }}</td>
               <td class="tabela__acoes">
-                @if (idParaExcluir() === contato.id) {
-                  <span class="confirmacao">
-                    Excluir?
-                    <button
-                      type="button"
-                      class="botao botao--perigo"
-                      (click)="confirmarExclusao(contato)"
-                    >
-                      Sim
-                    </button>
-                    <button
-                      type="button"
-                      class="botao botao--secundario"
-                      (click)="cancelarExclusao()"
-                    >
-                      Não
-                    </button>
-                  </span>
-                } @else {
-                  <button
-                    type="button"
-                    class="botao botao--link"
-                    (click)="editar(contato)"
-                    [attr.aria-label]="'Editar ' + contato.nome"
-                  >
-                    Editar
-                  </button>
-                  <button
-                    type="button"
-                    class="botao botao--link botao--link-perigo"
-                    (click)="pedirConfirmacaoExclusao(contato)"
-                    [attr.aria-label]="'Excluir ' + contato.nome"
-                  >
-                    Excluir
-                  </button>
-                }
+                <button
+                  type="button"
+                  uiButton
+                  variant="ghost"
+                  size="sm"
+                  extraClasses="text-muted-foreground hover:text-foreground"
+                  (click)="editar(contato)"
+                  [attr.aria-label]="'Editar ' + contato.nome"
+                >
+                  <svg lucidePencil aria-hidden="true"></svg>
+                  Editar
+                </button>
+                <button
+                  type="button"
+                  uiButton
+                  variant="ghost"
+                  size="sm"
+                  extraClasses="text-destructive hover:text-destructive"
+                  (click)="pedirConfirmacaoExclusao(contato)"
+                  [attr.aria-label]="'Excluir ' + contato.nome"
+                >
+                  <svg lucideTrash2 aria-hidden="true"></svg>
+                  Excluir
+                </button>
               </td>
             </tr>
           }
@@ -98,11 +109,13 @@
     <nav class="paginacao" aria-label="Paginação de contatos">
       <button
         type="button"
-        class="botao botao--secundario"
+        uiButton
+        variant="secondary"
         [disabled]="!podeAnterior() || carregando()"
         (click)="anterior()"
       >
-        ← Anterior
+        <svg lucideArrowLeft aria-hidden="true"></svg>
+        Anterior
       </button>
       <span aria-live="polite">
         Página {{ (dados()?.page ?? 0) + 1 }} de {{ dados()?.totalPages ?? 1 }} ({{
@@ -112,11 +125,13 @@
       </span>
       <button
         type="button"
-        class="botao botao--secundario"
+        uiButton
+        variant="secondary"
         [disabled]="!podeProxima() || carregando()"
         (click)="proxima()"
       >
-        Próxima →
+        Próxima
+        <svg lucideArrowRight aria-hidden="true"></svg>
       </button>
     </nav>
   }
@@ -128,4 +143,52 @@
     (salvo)="aoSalvar($event)"
     (cancelado)="fecharForm()"
   />
+}
+
+@if (contatoParaExcluir(); as contato) {
+  <div class="modal-fundo" (click)="cancelarExclusao()">
+    <div
+      class="modal"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="titulo-exclusao"
+      aria-describedby="descricao-exclusao"
+      (click)="$event.stopPropagation()"
+      (keydown.escape)="cancelarExclusao()"
+    >
+      <header class="modal__cabecalho modal__cabecalho--inicio">
+        <span class="modal__icone" aria-hidden="true">
+          <svg lucideTriangleAlert [size]="18"></svg>
+        </span>
+        <h2 id="titulo-exclusao">Excluir contato</h2>
+      </header>
+
+      <p id="descricao-exclusao" class="modal__texto">
+        Tem certeza de que deseja excluir <strong>{{ contato.nome }}</strong> ({{ contato.email }})?
+        Essa ação não pode ser desfeita.
+      </p>
+
+      <footer class="modal__rodape">
+        <button
+          #botaoCancelarExclusao
+          type="button"
+          uiButton
+          variant="secondary"
+          [disabled]="excluindo()"
+          (click)="cancelarExclusao()"
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          uiButton
+          variant="destructive"
+          [disabled]="excluindo()"
+          (click)="confirmarExclusao(contato)"
+        >
+          {{ excluindo() ? 'Excluindo…' : 'Excluir' }}
+        </button>
+      </footer>
+    </div>
+  </div>
 }

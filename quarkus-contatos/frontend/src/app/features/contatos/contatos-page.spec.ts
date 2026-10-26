@@ -73,4 +73,42 @@ describe('ContatosPage', () => {
     expect(remover).toHaveBeenCalledWith(1);
     expect(listar).toHaveBeenCalledTimes(2);
   });
+
+  it('deve abrir o modal de confirmação sem excluir nada até o usuário confirmar', async () => {
+    const elemento = fixture.nativeElement as HTMLElement;
+    elemento.querySelector<HTMLButtonElement>('button[aria-label="Excluir Maria Silva"]')?.click();
+    await fixture.whenStable();
+
+    const dialogo = elemento.querySelector('[role="alertdialog"]');
+    expect(dialogo).not.toBeNull();
+    expect(dialogo?.textContent).toContain('Maria Silva');
+    expect(remover).not.toHaveBeenCalled();
+    // Foco inicial no botão seguro, para não excluir sem querer.
+    expect(document.activeElement?.textContent?.trim()).toBe('Cancelar');
+
+    confirmar(dialogo!)?.click();
+    await fixture.whenStable();
+
+    expect(remover).toHaveBeenCalledWith(1);
+    expect(elemento.querySelector('[role="alertdialog"]')).toBeNull();
+  });
+
+  it('deve fechar o modal de confirmação ao cancelar, sem excluir', async () => {
+    const elemento = fixture.nativeElement as HTMLElement;
+    elemento.querySelector<HTMLButtonElement>('button[aria-label="Excluir João Souza"]')?.click();
+    await fixture.whenStable();
+
+    elemento.querySelector<HTMLElement>('.modal-fundo')?.click();
+    await fixture.whenStable();
+
+    expect(elemento.querySelector('[role="alertdialog"]')).toBeNull();
+    expect(remover).not.toHaveBeenCalled();
+  });
 });
+
+/** Botão "Excluir" do rodapé do diálogo de confirmação. */
+function confirmar(dialogo: Element): HTMLButtonElement | undefined {
+  return Array.from(dialogo.querySelectorAll('button')).find(
+    (botao) => botao.textContent?.trim() === 'Excluir',
+  );
+}
