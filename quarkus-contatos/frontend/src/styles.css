@@ -182,7 +182,11 @@ body {
   max-width: 1120px;
   margin: 2rem auto;
   padding: 0 1.25rem;
-  animation: aparecer 0.35s ease both;
+  /* Sem animação aqui de propósito: `animation-fill-mode: both` mantém o
+     preenchimento ativo mesmo após terminar, o que criaria um stacking context
+     permanente neste elemento. Como os modais (`.modal-fundo`, z-index 50)
+     vivem dentro dele, ficariam "presos" abaixo do header sticky (z-index 40),
+     deixando os overlays transparentes e interceptando cliques. */
 }
 
 /* ---------- Painel ---------- */
@@ -376,6 +380,16 @@ body {
   color: var(--cor-texto-suave);
   font-size: 0.8125rem;
   font-variant-numeric: tabular-nums;
+}
+
+/* O `opacity: 50` global do disabled sobre o secundário deixa o botão quase
+   invisível (texto e fundo somem juntos). Aqui o estado inativo fica discreto,
+   mas legível: sem fundo e com texto acinzentado. */
+.paginacao button:disabled {
+  opacity: 1;
+  background: transparent;
+  color: #94a3b8; /* slate-400 */
+  cursor: default;
 }
 
 /* ---------- Modal ---------- */
